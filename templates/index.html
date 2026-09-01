@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFM ANALYTICS DASHBOARD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>RFM Analysis</h1>
+        <p>Customer segmentation &amp; spending insights</p>
+    </div>
+
+    <div class="container">
+
+        <div class="search-section">
+            <h2>Look up a customer</h2>
+            <form action="/search" method="get" class="search-form">
+                <input type="text" name="customer_id" placeholder="Enter Customer ID (e.g. 1454)" value="{{ searched_id or '' }}">
+                <button type="submit">Search</button>
+            </form>
+
+            {% if searched_id %}
+                {% if searched_customer %}
+                <div class="search-result">
+                    <strong>Customer {{ searched_customer[0] }}</strong> —
+                    Last order: {{ searched_customer[1] }} |
+                    Frequency: {{ searched_customer[2] }} |
+                    Monetary: {{ searched_customer[3] }} |
+                    Segment: {{ searched_customer[9] }}
+                </div>
+                {% else %}
+                <div class="search-result not-found">No customer found with ID "{{ searched_id }}".</div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="summary">
+            {% for segment_row in segment_counts %}
+            <div class="card {{ segment_row[0]|lower|replace(' ', '-') }}">
+                <h3>{{ segment_row[0] }}</h3>
+                <p>{{ segment_row[1] }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>Segment Distribution</h2>
+        <div class="chart-section">
+            <div style="position: relative; height: 350px; width: 350px;">
+                <canvas id="segmentChart"></canvas>
+            </div>
+        </div>
+
+        <div class="insight">{{ stats_result }}</div>
+
+        <h2>Customer Details</h2>
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                <th>Customer Id</th>
+                <th>Last Order Date</th>
+                <th>Frequency</th>
+                <th>Monetary</th>
+                <th>Recency Days</th>
+                <th>Frequency Score</th>
+                <th>Monetary Score</th>
+                <th>Recency Score</th>
+                <th>RFM Code</th>
+                <th>Segment</th>
+                </tr>
+
+                {% for row in customers %}
+                <tr>
+                    {% for value in row %}
+                    <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <script>
+    const segmentLabels = {{ segment_counts|map(attribute=0)|list|tojson }};
+    const segmentValues = {{ segment_counts|map(attribute=1)|list|tojson }};
+
+    const ctx = document.getElementById('segmentChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: segmentLabels,
+            datasets: [{
+                data: segmentValues,
+                backgroundColor: ['#757575', '#e65100', '#1565c0', '#2e7d32'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 20, font: { size: 13 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.raw + ' customers';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>

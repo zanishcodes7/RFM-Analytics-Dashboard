@@ -1,0 +1,5 @@
+flask
+mysql-connector-python
+matplotlib
+scipy
+gunicorn
