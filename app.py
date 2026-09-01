@@ -9,13 +9,12 @@ import io
 from scipy import stats
 
 app = Flask(__name__)
-
 DB_CONFIG = {
-    "host": os.environ.get("DB_HOST"),
-    "port": int(os.environ.get("DB_PORT", 3306)),
-    "user": os.environ.get("DB_USER"),
-    "password": os.environ.get("DB_PASSWORD"),
-    "database": os.environ.get("DB_NAME")
+    "host": os.environ.get("DB_HOST") or os.environ.get("MYSQLHOST"),
+    "port": int(os.environ.get("DB_PORT") or os.environ.get("MYSQLPORT", 3306)),
+    "user": os.environ.get("DB_USER") or os.environ.get("MYSQLUSER"),
+    "password": os.environ.get("DB_PASSWORD") or os.environ.get("MYSQLPASSWORD"),
+    "database": os.environ.get("DB_NAME") or os.environ.get("MYSQLDATABASE")
 }
 
 RFM_QUERY = """
@@ -170,4 +169,6 @@ def chart():
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
     app.run(debug=True)
